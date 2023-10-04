@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Upload</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+</head>
+<body>
+    
+    <div class="container py-5">
+    <div class="input-group mb-3 text-center">
+        <input type="text" class="form-control" id="searchInput" placeholder="Search...">
+    </div>
+
+    <!-- Upload form -->
+    <form action="/create" method="post" class="text-center" enctype="multipart/form-data">
+        <h1>
+            <u>Upload CSV File</u>
+        </h1>
+        <div class="input-group mb-3 text-center">
+            <input type="file" class="form-control-file" name="avtar" required>
+            <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Upload</button>
+        </div>
+    </form>
+
+    <!-- message Area -->
+    <p class="text-danger">
+        <%= message %>
+    </p>
+
+    <!-- Table Area -->
+    <% if (csv.length !== 0) { %>
+        <table class="table table-hover" id="tb">
+            <thead>
+                <tr>
+                    <th class="fs-5" scope="col">S.No</th>
+                    <th class="fs-5" scope="col">FileName</th>
+                    <th class="fs-5" scope="col">Date</th>
+                    <th class="fs-5" scope="col">View</th>
+                    <th class="fs-5" scope="col">Edit</th>
+                    <th class="fs-5" scope="col">Delete</th>
+                </tr>
+            </thead>
+            <tbody class="table-group-divider">
+                <% let index = 1 %>
+                <% for (const csf_list of csv) { %>
+                    <tr>
+                        <th scope="row">
+                            <%= index %>
+                        </th>
+                        <td>
+                            <%= csf_list.FileName %>
+                        </td>
+                        <td>
+                            <%= csf_list.Date %>
+                        </td>
+                        <td><a href="/view/<%= csf_list._id %>"><img
+                                    src="https://cdn-icons-png.flaticon.com/128/709/709612.png" alt="view"
+                                    width="30px"></a></td>
+
+                        <td><a href="/edit/<%= csf_list._id %>"><img
+                                    src="https://cdn-icons-png.flaticon.com/128/4929/4929888.png" alt="edit"
+                                    width="30px"></a></td>
+
+                        <td><a href="/delete/<%= csf_list._id %>"><img
+                                    src="https://cdn-icons-png.flaticon.com/128/3221/3221897.png"
+                                    style="margin-left: 5px !important;" alt="delete" width="30px"></a></td>
+                    </tr>
+                    <% index++ %>
+                <% } %>
+            </tbody>
+        </table>
+    <% } %>
+    
+</div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Function to perform search
+            function performSearch(query) {
+                $.ajax({
+                    url: '/search', // Replace with the actual API endpoint
+                    type: 'POST',
+                    data: { query: query },
+                    success: function (data) {
+                        // Log the data received from the server for debugging
+                        console.log(data);
+
+                        // Replace the table content with the new data
+                        const dom = myData(data.data.AllData);
+                        $('#tb').html(dom);
+                    },
+                    error: function (error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+
+            // Listen for changes in the search input field
+            $('#searchInput').on('input', function () {
+                var query = $(this).val().trim();
+                if (query === '') {
+                    // Handle empty query, e.g., display all data
+                    $('#tb').html(initialDataHtml); // Replace with your initial data
+                } else {
+                    performSearch(query);
+                }
+            });
+
+            // Define a function to generate table data
+            const myData = (data) => {
+                let index = 1;
+                return $(`
+                    <tbody class="table-group-divider">
+                        ${data.map((csf_list) => {
+                            return `
+                                <tr>
+                                    <th scope="row">${index}</th>
+                                    <td>${csf_list.FileName}</td>
+                                    <td>${csf_list.Date}</td>
+                                    <td><a href="/view/${csf_list._id}"><img src="https://cdn-icons-png.flaticon.com/128/709/709612.png" alt="view" width="30px"></a></td>
+                                    <td><a href="/edit/${csf_list._id}"><img src="https://cdn-icons-png.flaticon.com/128/4929/4929888.png" alt="edit" width="30px"></a></td>
+                                    <td><a href="/delete/${csf_list._id}"><img src="https://cdn-icons-png.flaticon.com/128/3221/3221897.png" style="margin-left: 5px !important;" alt="delete" width="30px"></a></td>
+                                </tr>
+                            `;
+                            index++;
+                        }).join('')}
+                    </tbody>
+                `);
+            };
+
+            // Define initialDataHtml with your initial table data
+            const initialDataHtml = $('#tb').html();
+        });
+    </script>
+
+
+</body>
+</html>
